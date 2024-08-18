@@ -1,0 +1,2 @@
+createUser:
+  handler: src/user/createUser/handler.default
