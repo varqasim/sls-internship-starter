@@ -18,7 +18,7 @@ module.exports = {
     logRetentionInDays: 365,
   },
   plugins: ["serverless-esbuild", "serverless-iam-roles-per-function"],
-  service: "workshop-<NAME>",
+  service: "workshop-qasim",
   package: {
     individually: true
   },
@@ -32,6 +32,11 @@ module.exports = {
       treeShaking: true,
       outExtension: {
         '.js': '.mjs'
+      },
+      plugins: './esbuild-plugin.js',
+      banner: {
+        // https://github.com/evanw/esbuild/issues/1921
+        js: "import { createRequire } from 'module';import { fileURLToPath } from 'url';import { dirname } from 'path';const require = createRequire(import.meta.url);const __filename = fileURLToPath(import.meta.url);const __dirname = dirname(__filename);"
       },
       target: 'node20',
       platform: 'node',

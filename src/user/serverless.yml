@@ -1,2 +1,39 @@
 createUser:
   handler: src/user/createUser/handler.default
+  iamRoleStatements:
+    - Effect: Allow
+      Action: dynamodb:BatchWriteItem
+      Resource:
+        Fn::GetAtt:
+          - MyTable
+          - Arn
+    - Effect: Allow
+      Action: sns:Publish
+      Resource:
+        - Ref: SubscriptionCreatedTopic
+  environment:
+    TABLE_NAME:
+      Ref: MyTable
+    SNS_TOPIC:
+      Ref: SubscriptionCreatedTopic
+  events:
+    - http:
+        method: post
+        path: /v1/users
+
+getUser:
+  handler: src/user/getUser/handler.default
+  iamRoleStatements:
+    - Effect: Allow
+      Action: dynamodb:GetItem
+      Resource:
+        Fn::GetAtt:
+          - MyTable
+          - Arn
+  environment:
+    TABLE_NAME:
+      Ref: MyTable
+  events:
+    - http:
+        method: get
+        path: /v1/users/{phoneNumber}
