@@ -16,8 +16,12 @@ module.exports = {
     architecture: 'arm64',
     versionFunctions: false,
     logRetentionInDays: 365,
+    environment: {
+      STAGE: '${sls:stage}',
+      REGION: "us-east-1",
+    }
   },
-  plugins: ["serverless-esbuild", "serverless-iam-roles-per-function"],
+  plugins: ["serverless-esbuild", "serverless-iam-roles-per-function", "serverless-export-env"],
   service: "workshop-qasim",
   package: {
     individually: true
