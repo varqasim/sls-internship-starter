@@ -1,47 +1,26 @@
 import { APIGatewayEvent } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
-import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { SNSClient } from '@aws-sdk/client-sns';
+import { CreateUserUseCase } from "./useCase";
+import { UserRepository } from "../repositories/userRepository";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 const snsClient = new SNSClient({});
 
+const userRepository = new UserRepository(docClient);
+
 export default async (event: APIGatewayEvent) => {
   try {
     const { name, email, phoneNumber } = JSON.parse(event.body!);
 
-    if (!phoneNumber) {
-      return {
-        statusCode: 422,
-        body: null
-      }
-    }
-  
-    const command = new BatchWriteCommand({
-      RequestItems: {
-        [process.env.TABLE_NAME!]: [
-          {
-            PutRequest: {
-              Item: { pk: 'user', sk: phoneNumber, name, email, phoneNumber }
-            }
-          }
-        ]
-      }
-    });
-
-    await docClient.send(command);
-
-    const snsPublishCommand = new PublishCommand({
-      TopicArn: process.env.SNS_TOPIC!,
-      Message: JSON.stringify({ name, phoneNumber, email })
-    });
-
-    await snsClient.send(snsPublishCommand);
+    const useCase = new CreateUserUseCase(userRepository, snsClient);
+    const user = await useCase.exec(name, email, phoneNumber);
 
     return {
       statusCode: 201,
-      body: JSON.stringify({ name, email, phoneNumber })
+      body: JSON.stringify({ ...user })
     };
   } catch (error) {
     return {
